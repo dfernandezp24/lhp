@@ -25,8 +25,9 @@ function triggerAlarm() {
 }
 
 function quickAdd(name, tag) {
-    if(confirm(`¿Fichar a ${name} #${tag} para seguimiento?`)){
-        myPlayers.push({ gameName: name, tagLine: tag });
+    const cleanTag = tag || 'EUW';
+    if(confirm(`¿Fichar a ${name} #${cleanTag} para seguimiento?`)){
+        myPlayers.push({ gameName: name, tagLine: cleanTag });
         localStorage.setItem('myPlayers', JSON.stringify(myPlayers));
         fetchStatus(); 
     }
@@ -87,12 +88,11 @@ async function fetchStatus() {
                 let pastTeamHtml = '';
                 if (p.lastMatch.participants) {
                     let rows = p.lastMatch.participants.map(ally => {
-                        const safeTag = ally.tag || 'EUW'; 
                         return `
                         <div class="teammate-row">
                             <span style="color:#aaa;">${ally.championName}</span>
                             <span style="color:#fff;">${ally.name}</span>
-                            <button class="btn-quick-add" onclick="quickAdd('${ally.name}', '${safeTag}')">FICHAR</button>
+                            <button class="btn-quick-add" onclick="quickAdd('${ally.name}', '${ally.tag}')">FICHAR</button>
                         </div>
                     `}).join('');
                     
@@ -136,12 +136,11 @@ async function fetchStatus() {
 
                 if (p.gameData.participants) {
                     let teamRows = p.gameData.participants.map(ally => {
-                        const safeTag = ally.tag || 'EUW';
                         return `
                         <div class="teammate-row">
                             <span style="color:#aaa;">${ally.championId}</span>
                             <span style="color:#fff;">${ally.name}</span>
-                            <button class="btn-quick-add" onclick="quickAdd('${ally.name}', '${safeTag}')">FICHAR</button>
+                            <button class="btn-quick-add" onclick="quickAdd('${ally.name}', '${ally.tag}')">FICHAR</button>
                         </div>
                     `}).join('');
 
