@@ -24,7 +24,6 @@ function triggerAlarm() {
     audio.currentTime = 0; audio.play().catch(()=>{});
 }
 
-
 function quickAdd(name, tag) {
     if(confirm(`¿Fichar a ${name} #${tag} para seguimiento?`)){
         myPlayers.push({ gameName: name, tagLine: tag });
@@ -72,9 +71,34 @@ async function fetchStatus() {
 
             let imgUrl = `https://ddragon.leagueoflegends.com/cdn/${DD_VERSION}/img/profileicon/${p.iconId || 29}.png`;
 
+            let lastMatchHtml = '';
             let statusBadge = '';
-            let infoHtml = '';
-            let teamHtml = ''; 
+
+            if (p.lastMatch) {
+                const color = p.lastMatch.win ? 'var(--accent-green)' : 'var(--accent-red)';
+                const resultText = p.lastMatch.win ? 'WIN' : 'LOSS';
+                
+                if (!p.isIngame) {
+                    statusBadge = p.lastMatch.win 
+                        ? `<div class="status-badge victory">VICTORIA</div>`
+                        : `<div class="status-badge defeat">DERROTA</div>`;
+                }
+
+                lastMatchHtml = `
+                    <div style="margin-top:10px; padding-top:8px; border-top:1px dashed #333; font-size:0.85rem;">
+                        <div style="color:#666; font-size:0.7rem; font-weight:bold; margin-bottom:2px;">ÚLTIMA PARTIDA:</div>
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <span>${p.lastMatch.champion}</span>
+                            <span style="color:${color}; font-weight:bold;">${p.lastMatch.kda} (${resultText})</span>
+                        </div>
+                    </div>
+                `;
+            } else {
+                 if (!p.isIngame) statusBadge = `<div class="status-badge unknown">SIN DATOS</div>`;
+            }
+
+            let liveHtml = '';
+            let teamHtml = '';
 
             if (p.isIngame) {
                 statusBadge = `<div class="status-badge live"><div class="dot"></div> LIVE NOW</div>`;
@@ -83,7 +107,7 @@ async function fetchStatus() {
                 let rankColor = "#fff";
                 if(p.rank.includes("IRON")) rankColor = "#a19d94"; 
 
-                infoHtml = `
+                liveHtml = `
                     <div style="margin-bottom:5px; font-size:1rem; color:${rankColor}; font-weight:bold">ELO: ${p.rank}</div>
                     <div>MODO: <span class="highlight">${p.gameData.gameMode}</span></div>
                     <div>TIEMPO: <span class="highlight">${minutes > 0 ? minutes + ' min' : 'Iniciando'}</span></div>
@@ -105,18 +129,6 @@ async function fetchStatus() {
                         </details>
                     `;
                 }
-
-            } else if (p.lastMatch) {
-                if (p.lastMatch.win) statusBadge = `<div class="status-badge victory">VICTORIA</div>`;
-                else statusBadge = `<div class="status-badge defeat">DERROTA</div>`;
-
-                infoHtml = `
-                    <div>ÚLTIMA PARTIDA:</div>
-                    <div class="highlight">${p.lastMatch.champion}</div>
-                    <div style="color:#888">KDA: ${p.lastMatch.kda}</div>
-                `;
-            } else {
-                statusBadge = `<div class="status-badge unknown">SIN DATOS</div>`;
             }
 
             const opggLink = `https://www.op.gg/summoners/euw/${p.gameName}-${p.tagLine}`;
@@ -128,6 +140,7 @@ async function fetchStatus() {
             
             const card = document.createElement('div');
             card.className = `card ${p.isIngame ? 'ingame' : ''}`;
+            
             card.innerHTML = `
                 <div class="delete-btn" onclick="removePlayer(${index})">×</div>
                 <div class="card-header">
@@ -139,8 +152,7 @@ async function fetchStatus() {
                     ${statusBadge}
                 </div>
                 <div class="info-block">
-                    ${infoHtml}
-                    ${teamHtml} </div>
+                    ${liveHtml}       ${teamHtml}       ${lastMatchHtml}  </div>
                 <div class="actions">
                     <a href="${opggLink}" target="_blank" class="btn">OP.GG</a>
                     ${actionBtn}
