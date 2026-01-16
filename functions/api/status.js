@@ -1,7 +1,10 @@
 export async function onRequest(context) {
     // ESTA LÍNEA ES LA CLAVE: Le dice al código "Busca la contraseña en Cloudflare"
     const RIOT_API_KEY = context.env.RIOT_API_KEY;
-    
+    const REGION = 'euw1'; 
+    const PUUID_REGION = 'europe';
+
+
     let trackedPlayers = [];
     try {
         trackedPlayers = await context.request.json();

@@ -1,6 +1,9 @@
 export async function onRequest(context) {
     // ESTA LÍNEA ES LA CLAVE: Le dice al código "Busca la contraseña en Cloudflare"
     const RIOT_API_KEY = context.env.RIOT_API_KEY;
+    const REGION = 'euw1'; 
+    const PUUID_REGION = 'europe';
+
     try {
         // 1. Pedimos la lista completa de jugadores en HIERRO IV de SoloQ
         const leagueUrl = `https://${REGION}.api.riotgames.com/lol/league/v4/entries/RANKED_SOLO_5x5/IRON/IV?page=1&api_key=${RIOT_API_KEY}`;
