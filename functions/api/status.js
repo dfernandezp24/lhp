@@ -49,7 +49,7 @@ export async function onRequest(context) {
                     .filter(p => p.teamId === myTeamId && p.summonerId !== status.summonerId)
                     .map(p => ({
                         name: p.riotId?.split('#')[0] || p.summonerName, 
-                        tag: p.riotId?.split('#')[1] || "EUW",
+                        tag: (p.riotId?.split('#')[1] || "EUW"), 
                         championId: p.championId
                     }));
 
@@ -75,8 +75,9 @@ export async function onRequest(context) {
                 const pastAllies = matchData.info.participants
                     .filter(x => x.teamId === myTeamId && x.puuid !== status.puuid)
                     .map(x => ({
-                        name: x.riotIdGameName, 
-                        tag: x.riotIdTagLine,
+                        name: x.riotIdGameName || x.summonerName, // Fallback al nombre de invocador si no hay Riot ID
+                        // AQUÍ ESTABA EL ERROR: AÑADIDO EL OR EUW
+                        tag: x.riotIdTagLine || "EUW", 
                         championName: x.championName 
                     }));
                 

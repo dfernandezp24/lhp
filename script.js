@@ -86,13 +86,15 @@ async function fetchStatus() {
 
                 let pastTeamHtml = '';
                 if (p.lastMatch.participants) {
-                    let rows = p.lastMatch.participants.map(ally => `
+                    let rows = p.lastMatch.participants.map(ally => {
+                        const safeTag = ally.tag || 'EUW'; 
+                        return `
                         <div class="teammate-row">
                             <span style="color:#aaa;">${ally.championName}</span>
                             <span style="color:#fff;">${ally.name}</span>
-                            <button class="btn-quick-add" onclick="quickAdd('${ally.name}', '${ally.tag}')">FICHAR</button>
+                            <button class="btn-quick-add" onclick="quickAdd('${ally.name}', '${safeTag}')">FICHAR</button>
                         </div>
-                    `).join('');
+                    `}).join('');
                     
                     pastTeamHtml = `
                         <details class="team-list" style="margin-top:5px; border-color:#333;">
@@ -109,7 +111,8 @@ async function fetchStatus() {
                             <span>${p.lastMatch.champion}</span>
                             <span style="color:${color}; font-weight:bold;">${p.lastMatch.kda} (${resultText})</span>
                         </div>
-                        ${pastTeamHtml} </div>
+                        ${pastTeamHtml} 
+                    </div>
                 `;
             } else {
                  if (!p.isIngame) statusBadge = `<div class="status-badge unknown">SIN DATOS</div>`;
@@ -132,12 +135,15 @@ async function fetchStatus() {
                 `;
 
                 if (p.gameData.participants) {
-                    let teamRows = p.gameData.participants.map(ally => `
+                    let teamRows = p.gameData.participants.map(ally => {
+                        const safeTag = ally.tag || 'EUW';
+                        return `
                         <div class="teammate-row">
-                            <span style="color:#aaa;">${ally.championId}</span> <span style="color:#fff;">${ally.name}</span>
-                            <button class="btn-quick-add" onclick="quickAdd('${ally.name}', '${ally.tag}')">FICHAR</button>
+                            <span style="color:#aaa;">${ally.championId}</span>
+                            <span style="color:#fff;">${ally.name}</span>
+                            <button class="btn-quick-add" onclick="quickAdd('${ally.name}', '${safeTag}')">FICHAR</button>
                         </div>
-                    `).join('');
+                    `}).join('');
 
                     liveTeamHtml = `
                         <details class="team-list">
@@ -171,7 +177,8 @@ async function fetchStatus() {
                 <div class="info-block">
                     ${liveHtml}       
                     ${liveTeamHtml}   
-                    ${lastMatchHtml}  </div>
+                    ${lastMatchHtml}  
+                </div>
                 <div class="actions">
                     <a href="${opggLink}" target="_blank" class="btn">OP.GG</a>
                     ${actionBtn}
