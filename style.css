@@ -1,6 +1,6 @@
 :root {
-    --bg-color: #0b0b0b;
-    --card-bg: #111;
+    --bg-color: #050505;
+    --card-bg: rgba(20, 20, 20, 0.9); 
     --text-color: #eee;
     --accent-green: #00ff41;
     --accent-red: #ff2a2a;
@@ -15,154 +15,112 @@ body {
     font-family: var(--font-main);
     margin: 0;
     padding: 20px;
-    cursor: var(--cursor-url) 16 16, auto; /
+    min-height: 100vh;
+    cursor: var(--cursor-url) 16 16, auto;
+    position: relative;
+    overflow-x: hidden; 
 }
 
-button, a, input, .delete-btn {
-    cursor: var(--cursor-url) 16 16, pointer !important;
+
+.space-background {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    z-index: -1;
+    background: radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%);
 }
+.stars {
+    width: 1px; height: 1px;
+    background: transparent;
+    box-shadow: 10px 10px #fff, 20px 50px #fff, 50px 80px #fff, 100px 100px #fff,
+                150px 10px #ffffff80, 200px 200px #ffffff80, 300px 300px #fff; 
+    animation: animStar 50s linear infinite;
+}
+.stars:after {
+    content: " "; position: absolute; top: 2000px; width: 1px; height: 1px;
+    background: transparent; box-shadow: inherit;
+}
+@keyframes animStar { from { transform: translateY(0px); } to { transform: translateY(-2000px); } }
+
+
+button, a, input, .delete-btn { cursor: var(--cursor-url) 16 16, pointer !important; }
 
 header {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 2px solid var(--border-color);
-    padding-bottom: 20px;
-    margin-bottom: 30px;
-    gap: 15px;
+    display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center;
+    border-bottom: 2px solid var(--border-color); padding-bottom: 20px; margin-bottom: 30px; gap: 15px;
+    background: rgba(0,0,0,0.6); padding: 20px; border-radius: 8px; backdrop-filter: blur(4px);
 }
 
-.logo { font-size: 1.8rem; font-weight: 800; letter-spacing: -2px; color: #fff; }
+.logo { font-size: 1.8rem; font-weight: 800; letter-spacing: -2px; color: #fff; text-shadow: 0 0 10px rgba(0,255,65,0.3); }
 .blink { animation: blinker 1s linear infinite; color: var(--accent-green); }
 @keyframes blinker { 50% { opacity: 0; } }
 
 .controls { display: flex; gap: 10px; align-items: center; }
-.separator { width: 1px; background: #333; height: 30px; margin: 0 5px; }
+input { background: #000; border: 1px solid var(--border-color); color: var(--accent-green); padding: 10px; font-family: inherit; font-weight: bold; text-transform: uppercase; }
 
-input {
-    background: #000;
-    border: 1px solid var(--border-color);
-    color: var(--accent-green);
-    padding: 10px;
-    font-family: inherit;
-    font-weight: bold;
-    text-transform: uppercase;
-}
-
-.btn-add {
-    background: var(--text-color);
-    color: #000;
-    border: none;
-    font-weight: 800;
-    padding: 0 20px;
-    height: 38px;
-}
-.btn-add:hover { background: var(--accent-green); }
+.btn-add { background: var(--text-color); color: #000; border: none; font-weight: 800; padding: 0 20px; height: 38px; }
+.btn-add:hover { background: var(--accent-green); box-shadow: 0 0 15px var(--accent-green); }
 
 .btn-sound {
-    background: #1a1a1a;
-    color: #666;
-    border: 1px solid #333;
-    padding: 0 15px;
-    height: 38px;
-    font-weight: bold;
-    font-family: inherit;
-    min-width: 80px;
+    background: #1a1a1a; color: #666; border: 1px solid #333; padding: 0 15px; height: 38px;
+    font-weight: bold; min-width: 80px; display: flex; align-items: center; justify-content: center;
 }
 .btn-sound.active {
-    background: var(--accent-red);
-    color: #fff;
-    border-color: var(--accent-red);
-    box-shadow: 0 0 15px rgba(255, 42, 42, 0.4);
-    animation: pulse-btn 1s infinite alternate;
+    background: var(--accent-red); color: #fff; border-color: var(--accent-red);
+    box-shadow: 0 0 15px rgba(255, 42, 42, 0.4); animation: pulse-btn 1s infinite alternate;
 }
 @keyframes pulse-btn { from { opacity: 1; } to { opacity: 0.8; } }
 
-#grid-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-    gap: 25px;
-}
+#grid-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 25px; }
 
 .card {
-    background: var(--card-bg);
-    border: 1px solid var(--border-color);
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    position: relative;
-    min-height: 200px;
+    background: var(--card-bg); border: 1px solid var(--border-color); padding: 20px;
+    display: flex; flex-direction: column; position: relative; min-height: 200px;
+    transition: transform 0.2s; backdrop-filter: blur(5px);
 }
-.card:hover { border-color: #555; }
-@keyframes sirena-roja {
-    0% {
-        border-color: #ff0000;
-        box-shadow: 0 0 10px rgba(255, 0, 0, 0.5), inset 0 0 10px rgba(255, 0, 0, 0.2);
-    }
-    50% {
-        border-color: #ff4444;
-        box-shadow: 0 0 30px 15px rgba(255, 0, 0, 0.6), inset 0 0 20px rgba(255, 0, 0, 0.4);
-    }
-    100% {
-        border-color: #ff0000;
-        box-shadow: 0 0 10px rgba(255, 0, 0, 0.5), inset 0 0 10px rgba(255, 0, 0, 0.2);
-    }
-}
-
-.card.ingame {
-    animation: sirena-roja 1.5s infinite ease-in-out;
-    z-index: 10; 
-    transform: scale(1.02); 
-    transition: all 0.3s ease;
-    background-color: #1a0505; 
+.card:hover { border-color: #555; transform: translateY(-3px); }
+.card.ingame { 
+    border-color: #ff0000; background-color: rgba(40, 5, 5, 0.9); 
+    box-shadow: 0 0 15px rgba(255, 0, 0, 0.2); 
 }
 
 .delete-btn {
-    position: absolute;
-    top: -10px;
-    left: -10px;
-    background: #000;
-    border: 1px solid #333;
-    width: 24px;
-    height: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #666;
-    font-size: 1.2rem;
-    line-height: 1;
-    z-index: 10;
+    position: absolute; top: -10px; left: -10px; background: #000; border: 1px solid #333;
+    width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;
+    color: #666; z-index: 10;
 }
 .delete-btn:hover { color: var(--accent-red); border-color: var(--accent-red); }
 
 .card-header { display: flex; gap: 15px; margin-bottom: 15px; position: relative; }
-.champ-icon { width: 60px; height: 60px; border: 2px solid #222; object-fit: cover; }
+
+.profile-icon { width: 60px; height: 60px; border: 2px solid #222; border-radius: 50%; object-fit: cover; }
 
 .player-info { flex: 1; }
 .player-name { font-size: 1.4rem; font-weight: 800; line-height: 1; margin-bottom: 5px; }
 .tag { color: #666; font-size: 0.9rem; font-weight: bold; }
 
-.status-badge {
-    position: absolute;
-    top: 0; right: 0;
-    font-size: 0.8rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;
-    display: flex; align-items: center; gap: 8px;
-}
-.status-badge.live { color: var(--accent-red); text-shadow: 0 0 10px var(--accent-red); }
+.status-badge { position: absolute; top: 0; right: 0; font-size: 0.8rem; font-weight: 800; text-transform: uppercase; }
+.status-badge.live { color: #ff0000; text-shadow: 0 0 10px #ff0000; animation: blinker 0.5s infinite alternate; }
 .status-badge.victory { color: var(--accent-green); }
 .status-badge.defeat { color: var(--accent-red); }
-.status-badge.unknown { color: #444; }
 
-.dot { width: 8px; height: 8px; background: currentColor; border-radius: 50%; }
-.live .dot { animation: pulse 1s infinite; }
-@keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0; } 100% { opacity: 1; } }
-
-.info-block {
-    margin-top: auto; padding-top: 15px; border-top: 1px solid #222;
-    font-size: 0.9rem; line-height: 1.6; color: #888;
-}
+.info-block { margin-top: auto; padding-top: 15px; border-top: 1px solid #222; font-size: 0.9rem; color: #888; }
 .highlight { color: #fff; font-weight: bold; }
+
+
+details.team-list { margin-top: 10px; background: rgba(0,0,0,0.5); border: 1px solid #333; padding: 5px; border-radius: 4px; }
+details.team-list summary { cursor: pointer; font-size: 0.8rem; color: #aaa; font-weight: bold; outline: none; list-style: none; }
+details.team-list summary::-webkit-details-marker { display: none; }
+details.team-list summary:hover { color: #fff; }
+.teammate-row { 
+    display: flex; justify-content: space-between; align-items: center; 
+    font-size: 0.75rem; padding: 4px 0; border-bottom: 1px solid #222; 
+}
+.teammate-row:last-child { border-bottom: none; }
+.btn-quick-add { 
+    background: none; border: 1px solid #333; color: var(--accent-green); 
+    cursor: pointer; font-size: 0.7rem; padding: 1px 6px; 
+}
+.btn-quick-add:hover { background: var(--accent-green); color: #000; }
 
 .actions { margin-top: 20px; display: grid; grid-template-columns: 1fr 2fr; gap: 10px; }
 .btn {
@@ -172,24 +130,18 @@ input {
     text-decoration: none; transition: 0.2s;
 }
 .btn:hover { background: #222; color: #fff; }
-
 .btn-spectate { background: var(--accent-red); color: #000; border-color: var(--accent-red); }
-.btn-spectate:hover { background: #d40000; color: #fff; box-shadow: 0 0 15px rgba(255, 42, 42, 0.4); }
+.btn-spectate:hover { color: #fff; }
 
-.loading { text-align: center; color: #555; margin-top: 50px; grid-column: 1 / -1; }
-.toast {
-    position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
-    background: var(--accent-green); color: #000; padding: 10px 25px; font-weight: 800; z-index: 100;
+
+footer { margin-top: 50px; border-top: 1px solid #333; padding-top: 20px; text-align: center; }
+.scout-link {
+    display: inline-block; padding: 15px 40px; background: #111; border: 1px solid var(--accent-green);
+    color: var(--accent-green); text-decoration: none; font-weight: 800; font-size: 1.2rem;
+    transition: 0.3s;
 }
+.scout-link:hover { background: var(--accent-green); color: #000; box-shadow: 0 0 20px var(--accent-green); }
+
+.loading { text-align: center; color: #555; margin-top: 50px; }
+.toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: var(--accent-green); color: #000; padding: 10px 25px; font-weight: 800; z-index: 100; }
 .hidden { display: none; }
-
-.status-badge.live {
-    color: #ff0000;
-    text-shadow: 0 0 10px #ff0000, 0 0 20px #ff0000; 
-    animation: texto-parpadeo 0.8s infinite alternate;
-}
-
-@keyframes texto-parpadeo {
-    from { opacity: 1; }
-    to { opacity: 0.6; }
-}

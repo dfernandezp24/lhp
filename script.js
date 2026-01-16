@@ -24,6 +24,15 @@ function triggerAlarm() {
     audio.currentTime = 0; audio.play().catch(()=>{});
 }
 
+
+function quickAdd(name, tag) {
+    if(confirm(`¿Fichar a ${name} #${tag} para seguimiento?`)){
+        myPlayers.push({ gameName: name, tagLine: tag });
+        localStorage.setItem('myPlayers', JSON.stringify(myPlayers));
+        fetchStatus(); 
+    }
+}
+
 async function fetchStatus() {
     const container = document.getElementById('grid-container');
 
@@ -62,66 +71,76 @@ async function fetchStatus() {
             }
 
             let imgUrl = `https://ddragon.leagueoflegends.com/cdn/${DD_VERSION}/img/profileicon/${p.iconId || 29}.png`;
-            if (!p.isIngame && p.lastMatch && p.lastMatch.champion) {
-                let champClean = p.lastMatch.champion.replace(" ", "").replace("'", "");
-                if(champClean === "Wukong") champClean = "MonkeyKing";
-                imgUrl = `https://ddragon.leagueoflegends.com/cdn/${DD_VERSION}/img/champion/${champClean}.png`;
-            }
 
             let statusBadge = '';
+            let infoHtml = '';
+            let teamHtml = ''; 
+
             if (p.isIngame) {
                 statusBadge = `<div class="status-badge live"><div class="dot"></div> LIVE NOW</div>`;
-            } else if (p.lastMatch) {
-                if (p.lastMatch.win) statusBadge = `<div class="status-badge victory">VICTORIA</div>`;
-                else statusBadge = `<div class="status-badge defeat">DERROTA</div>`;
-            } else {
-                statusBadge = `<div class="status-badge unknown">SIN DATOS</div>`;
-            }
-
-            let infoHtml = '';
-            let actionBtn = `<button class="btn" disabled>OFFLINE</button>`;
-
-            if (p.isIngame) {
-                const minutes = Math.floor((Date.now() - p.gameData.startTime) / 60000);
                 
+                const minutes = Math.floor((Date.now() - p.gameData.startTime) / 60000);
                 let rankColor = "#fff";
                 if(p.rank.includes("IRON")) rankColor = "#a19d94"; 
-                if(p.rank.includes("BRONZE")) rankColor = "#cd7f32"; 
-                if(p.rank.includes("SILVER")) rankColor = "#a6a6a6"; 
 
                 infoHtml = `
                     <div style="margin-bottom:5px; font-size:1rem; color:${rankColor}; font-weight:bold">ELO: ${p.rank}</div>
                     <div>MODO: <span class="highlight">${p.gameData.gameMode}</span></div>
                     <div>TIEMPO: <span class="highlight">${minutes > 0 ? minutes + ' min' : 'Iniciando'}</span></div>
                 `;
-                
-                const spectateCmd = `cd C:\\Riot Games\\League of Legends\\Game && "League of Legends.exe" "spectator spectator.euw1.lol.riotgames.com:80 ${p.gameData.encryptionKey} ${p.gameData.gameId} EUW1" "-UseRads"`;
-                actionBtn = `<button class="btn btn-spectate" onclick='copyToClipboard(\`${spectateCmd}\`)'>📡 CONECTAR (CMD)</button>`;
-            
+
+                if (p.gameData.participants) {
+                    let teamRows = p.gameData.participants.map(ally => `
+                        <div class="teammate-row">
+                            <span style="color:#aaa;">${ally.championId}</span>
+                            <span style="color:#fff;">${ally.name}</span>
+                            <button class="btn-quick-add" onclick="quickAdd('${ally.name}', '${ally.tag}')">FICHAR</button>
+                        </div>
+                    `).join('');
+
+                    teamHtml = `
+                        <details class="team-list">
+                            <summary>👥 VER EQUIPO ALIADO</summary>
+                            ${teamRows}
+                        </details>
+                    `;
+                }
+
             } else if (p.lastMatch) {
+                if (p.lastMatch.win) statusBadge = `<div class="status-badge victory">VICTORIA</div>`;
+                else statusBadge = `<div class="status-badge defeat">DERROTA</div>`;
+
                 infoHtml = `
                     <div>ÚLTIMA PARTIDA:</div>
                     <div class="highlight">${p.lastMatch.champion}</div>
                     <div style="color:#888">KDA: ${p.lastMatch.kda}</div>
                 `;
-                actionBtn = `<a href="#" class="btn" style="opacity:0.5; cursor:default">NO DISPONIBLE</a>`;
+            } else {
+                statusBadge = `<div class="status-badge unknown">SIN DATOS</div>`;
             }
 
             const opggLink = `https://www.op.gg/summoners/euw/${p.gameName}-${p.tagLine}`;
+            const spectateCmd = p.isIngame ? `cd C:\\Riot Games\\League of Legends\\Game && "League of Legends.exe" "spectator spectator.euw1.lol.riotgames.com:80 ${p.gameData.encryptionKey} ${p.gameData.gameId} EUW1" "-UseRads"` : "";
+
+            const actionBtn = p.isIngame 
+                ? `<button class="btn btn-spectate" onclick='copyToClipboard(\`${spectateCmd}\`)'>📡 CONECTAR (CMD)</button>`
+                : `<button class="btn" disabled style="opacity:0.3">OFFLINE</button>`;
             
             const card = document.createElement('div');
             card.className = `card ${p.isIngame ? 'ingame' : ''}`;
             card.innerHTML = `
                 <div class="delete-btn" onclick="removePlayer(${index})">×</div>
                 <div class="card-header">
-                    <img src="${imgUrl}" class="champ-icon" onerror="this.src='https://ddragon.leagueoflegends.com/cdn/img/champion/splash/Poro_0.jpg'">
+                    <img src="${imgUrl}" class="profile-icon" onerror="this.src='https://ddragon.leagueoflegends.com/cdn/img/champion/splash/Poro_0.jpg'">
                     <div class="player-info">
                         <div class="player-name">${p.gameName}</div>
                         <div class="tag">#${p.tagLine}</div>
                     </div>
                     ${statusBadge}
                 </div>
-                <div class="info-block">${infoHtml}</div>
+                <div class="info-block">
+                    ${infoHtml}
+                    ${teamHtml} </div>
                 <div class="actions">
                     <a href="${opggLink}" target="_blank" class="btn">OP.GG</a>
                     ${actionBtn}
@@ -132,9 +151,7 @@ async function fetchStatus() {
 
         if (newGameDetected) triggerAlarm();
 
-    } catch (error) {
-        console.error("Error:", error);
-    }
+    } catch (error) { console.error("Error:", error); }
 }
 
 function addPlayer() {
@@ -144,7 +161,6 @@ function addPlayer() {
     myPlayers.push({ gameName: name, tagLine: tag });
     localStorage.setItem('myPlayers', JSON.stringify(myPlayers));
     document.getElementById('inputName').value = '';
-    document.getElementById('inputTag').value = '';
     fetchStatus();
 }
 
