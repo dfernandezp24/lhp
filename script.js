@@ -84,6 +84,24 @@ async function fetchStatus() {
                         : `<div class="status-badge defeat">DERROTA</div>`;
                 }
 
+                let pastTeamHtml = '';
+                if (p.lastMatch.participants) {
+                    let rows = p.lastMatch.participants.map(ally => `
+                        <div class="teammate-row">
+                            <span style="color:#aaa;">${ally.championName}</span>
+                            <span style="color:#fff;">${ally.name}</span>
+                            <button class="btn-quick-add" onclick="quickAdd('${ally.name}', '${ally.tag}')">FICHAR</button>
+                        </div>
+                    `).join('');
+                    
+                    pastTeamHtml = `
+                        <details class="team-list" style="margin-top:5px; border-color:#333;">
+                            <summary style="color:#666; font-size:0.7rem;">👥 VER EQUIPO DE ESTA PARTIDA</summary>
+                            ${rows}
+                        </details>
+                    `;
+                }
+
                 lastMatchHtml = `
                     <div style="margin-top:10px; padding-top:8px; border-top:1px dashed #333; font-size:0.85rem;">
                         <div style="color:#666; font-size:0.7rem; font-weight:bold; margin-bottom:2px;">ÚLTIMA PARTIDA:</div>
@@ -91,14 +109,14 @@ async function fetchStatus() {
                             <span>${p.lastMatch.champion}</span>
                             <span style="color:${color}; font-weight:bold;">${p.lastMatch.kda} (${resultText})</span>
                         </div>
-                    </div>
+                        ${pastTeamHtml} </div>
                 `;
             } else {
                  if (!p.isIngame) statusBadge = `<div class="status-badge unknown">SIN DATOS</div>`;
             }
 
             let liveHtml = '';
-            let teamHtml = '';
+            let liveTeamHtml = '';
 
             if (p.isIngame) {
                 statusBadge = `<div class="status-badge live"><div class="dot"></div> LIVE NOW</div>`;
@@ -116,15 +134,14 @@ async function fetchStatus() {
                 if (p.gameData.participants) {
                     let teamRows = p.gameData.participants.map(ally => `
                         <div class="teammate-row">
-                            <span style="color:#aaa;">${ally.championId}</span>
-                            <span style="color:#fff;">${ally.name}</span>
+                            <span style="color:#aaa;">${ally.championId}</span> <span style="color:#fff;">${ally.name}</span>
                             <button class="btn-quick-add" onclick="quickAdd('${ally.name}', '${ally.tag}')">FICHAR</button>
                         </div>
                     `).join('');
 
-                    teamHtml = `
+                    liveTeamHtml = `
                         <details class="team-list">
-                            <summary>👥 VER EQUIPO ALIADO</summary>
+                            <summary>👥 VER EQUIPO ACTUAL</summary>
                             ${teamRows}
                         </details>
                     `;
@@ -152,7 +169,9 @@ async function fetchStatus() {
                     ${statusBadge}
                 </div>
                 <div class="info-block">
-                    ${liveHtml}       ${teamHtml}       ${lastMatchHtml}  </div>
+                    ${liveHtml}       
+                    ${liveTeamHtml}   
+                    ${lastMatchHtml}  </div>
                 <div class="actions">
                     <a href="${opggLink}" target="_blank" class="btn">OP.GG</a>
                     ${actionBtn}

@@ -23,12 +23,10 @@ export async function onRequest(context) {
             status.gameName = accountData.gameName;
             status.tagLine = accountData.tagLine;
 
-
             const summonerUrl = `https://${REGION}.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/${status.puuid}?api_key=${RIOT_API_KEY}`;
             const summonerRes = await fetch(summonerUrl).then(r => r.json());
             status.summonerId = summonerRes.id;
             status.iconId = summonerRes.profileIconId;
-
 
             try {
                 const leagueUrl = `https://${REGION}.api.riotgames.com/lol/league/v4/entries/by-summoner/${status.summonerId}?api_key=${RIOT_API_KEY}`;
@@ -70,13 +68,24 @@ export async function onRequest(context) {
             if (Array.isArray(matchIds) && matchIds.length > 0) {
                 const matchDetailUrl = `https://${PUUID_REGION}.api.riotgames.com/lol/match/v5/matches/${matchIds[0]}?api_key=${RIOT_API_KEY}`;
                 const matchData = await fetch(matchDetailUrl).then(r => r.json());
+                
                 const p = matchData.info.participants.find(x => x.puuid === status.puuid);
+                const myTeamId = p.teamId;
+
+                const pastAllies = matchData.info.participants
+                    .filter(x => x.teamId === myTeamId && x.puuid !== status.puuid)
+                    .map(x => ({
+                        name: x.riotIdGameName, 
+                        tag: x.riotIdTagLine,
+                        championName: x.championName 
+                    }));
                 
                 status.lastMatch = {
                     win: p.win,
                     kda: `${p.kills}/${p.deaths}/${p.assists}`,
                     champion: p.championName,
-                    gameMode: matchData.info.gameMode 
+                    gameMode: matchData.info.gameMode,
+                    participants: pastAllies 
                 };
             }
 
