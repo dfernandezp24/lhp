@@ -1,6 +1,6 @@
 export async function onRequest(context) {
     // CLAVE PUESTA A FUEGO PARA QUE FUNCIONE YA
-    const RIOT_API_KEY = "RGAPI-d0fce8bf-97a0-4bde-ab86-d861aca34e42";
+    const RIOT_API_KEY = "RGAPI-79cef97a-f029-4542-b7d6-7f55e1aca0e1";
     
     const REGION = 'euw1';        // Europa Oeste
     const ACCOUNT_REGION = 'europe'; 
