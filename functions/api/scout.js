@@ -1,7 +1,10 @@
 export async function onRequest(context) {
-    const RIOT_API_KEY = context.env.RIOT_API_KEY; 
-    const REGION = 'euw1'; 
-    const PUUID_REGION = 'europe'; 
+
+    const RIOT_API_KEY = "RGAPI-d0fce8bf-97a0-4bde-ab86-d861aca34e42";
+    
+    const REGION = 'euw1';        
+    const ACCOUNT_REGION = 'europe'; 
+
 
     if (!RIOT_API_KEY) return new Response(JSON.stringify({ error: "No API Key" }), { status: 500 });
 
