@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HIERRO INDEX</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <header>
+        <div class="logo">HIERRO INDEX <span class="blink">_</span></div>
+        
+        <div class="controls">
+            <button id="btnSound" onclick="toggleSound()" class="btn-sound" title="Activar Sirena">OFF</button>
+            <div class="separator"></div>
+
+            <input type="text" id="inputName" placeholder="Nombre">
+            <input type="text" id="inputTag" placeholder="Tag" style="width: 50px;">
+            <button onclick="addPlayer()" class="btn-add">AÑADIR</button>
+        </div>
+    </header>
+
+    <div class="controls">
+    <button id="btnSound" ... >OFF</button>
+    <div class="separator"></div>
+
+    <a href="scout.html" class="btn-sound" style="text-decoration:none; display:flex; align-items:center; background:#222; color:#fff;">SCOUT</a>
+    
+    <div class="separator"></div>
+
+    <main id="grid-container">
+        <div class="loading">SISTEMA DE VIGILANCIA LISTO. AÑADE OBJETIVOS...</div>
+    </main>
+
+    <div id="toast" class="toast hidden">COMANDO DE ESPECTADOR COPIADO</div>
+
+    <audio id="audioSiren" src="sonidos/alarma.mp3" preload="auto"></audio>
+
+    <script src="script.js"></script>
+</body>
+</html>

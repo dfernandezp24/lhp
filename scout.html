@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HIERRO SCOUT</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;800&display=swap" rel="stylesheet">
+    <style>
+        .scout-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 2px solid #333; padding-bottom: 20px; }
+        .back-btn { text-decoration: none; color: #fff; border: 1px solid #333; padding: 10px 20px; font-weight: bold; }
+        .back-btn:hover { background: #222; }
+        .refresh-btn { background: var(--accent-green); color: #000; border: none; padding: 10px 30px; font-weight: 800; font-family: inherit; cursor: pointer; }
+        .refresh-btn:hover { background: #00cc33; box-shadow: 0 0 15px rgba(0, 255, 65, 0.4); }
+        
+        .stat-row { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 0.9rem; }
+        .wr-bad { color: var(--accent-red); font-weight: bold; font-size: 1.2rem; }
+        .btn-sign { width: 100%; background: #fff; color: #000; border: none; padding: 12px; font-weight: 800; margin-top: 15px; cursor: pointer; font-family: inherit; }
+        .btn-sign:hover { background: var(--accent-green); }
+        .btn-sign:disabled { background: #333; color: #666; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+
+    <header class="scout-header">
+        <a href="index.html" class="back-btn">← VOLVER AL INDEX</a>
+        <div class="logo">MERCADO DE FICHAJES (IRON IV)</div>
+        <button onclick="loadScout()" class="refresh-btn">🔄 BUSCAR NUEVOS</button>
+    </header>
+
+    <main id="grid-container">
+        <div class="loading">PULSANDO EL BOTÓN DE BUSCAR...</div>
+    </main>
+
+    <div id="toast" class="toast hidden">JUGADOR FICHADO</div>
+
+    <script>
+        async function loadScout() {
+            const container = document.getElementById('grid-container');
+            container.innerHTML = '<div class="loading">OJEANDO LAS PROFUNDIDADES DE HIERRO...<br>(Esto tarda unos segundos)</div>';
+
+            try {
+                const res = await fetch('/api/scout');
+                const players = await res.json();
+
+                if (players.error || players.length === 0) {
+                    container.innerHTML = '<div class="loading" style="color:red">ERROR DE API O SIN RESULTADOS. PRUEBA OTRA VEZ.</div>';
+                    return;
+                }
+
+                container.innerHTML = '';
+
+                players.forEach(p => {
+                    const card = document.createElement('div');
+                    card.className = 'card';
+                    let myPlayers = JSON.parse(localStorage.getItem('myPlayers')) || [];
+                    const isAlreadyTracked = myPlayers.some(x => x.gameName === p.gameName && x.tagLine === p.tagLine);
+                    
+                    const btnText = isAlreadyTracked ? "YA FICHADO" : "FICHAR JUGADOR";
+                    const btnDisabled = isAlreadyTracked ? "disabled" : "";
+                    card.innerHTML = `
+                        <div class="player-info">
+                            <div class="player-name" style="font-size:1.6rem">${p.gameName}</div>
+                            <div class="tag">#${p.tagLine}</div>
+                        </div>
+                        <div class="info-block">
+                            <div class="stat-row">
+                                <span>WINRATE:</span>
+                                <span class="wr-bad">${p.wr}%</span>
+                            </div>
+                            <div class="stat-row">
+                                <span>PARTIDAS:</span>
+                                <span>${p.wins}W / ${p.losses}L</span>
+                            </div>
+                            <div class="stat-row">
+                                <span>LIGA:</span>
+                                <span>IRON IV (${p.lp} LP)</span>
+                            </div>
+                        </div>
+                        <button class="btn-sign" ${btnDisabled} onclick="signPlayer('${p.gameName}', '${p.tagLine}', this)">
+                            ${btnText}
+                        </button>
+                    `;
+                    container.appendChild(card);
+                });
+            } catch (e) {
+                container.innerHTML = '<div class="loading" style="color:red">FALLO DE CONEXIÓN</div>';
+            }
+        }
+
+        function signPlayer(name, tag, btn) {
+            let myPlayers = JSON.parse(localStorage.getItem('myPlayers')) || [];
+            myPlayers.push({ gameName: name, tagLine: tag });
+            localStorage.setItem('myPlayers', JSON.stringify(myPlayers));
+            btn.innerText = "¡FICHADO!";
+            btn.disabled = true;
+            btn.style.backgroundColor = "#00ff41";
+            const toast = document.getElementById('toast');
+            toast.classList.remove('hidden');
+            setTimeout(() => toast.classList.add('hidden'), 2000);
+        }
+        loadScout();
+    </script>
+</body>
+</html>
