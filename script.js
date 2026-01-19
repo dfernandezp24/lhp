@@ -1,38 +1,3 @@
-const API_URL = '/api/status';
-const DD_VERSION = "14.1.1"; 
-
-let myPlayers = JSON.parse(localStorage.getItem('myPlayers')) || [];
-let soundEnabled = false;
-let lastGameIds = {}; 
-
-function toggleSound() {
-    const btn = document.getElementById('btnSound');
-    const audio = document.getElementById('audioSiren');
-    soundEnabled = !soundEnabled;
-    if (soundEnabled) {
-        btn.innerHTML = "🔊 ON"; btn.classList.add('active');
-        audio.volume = 0.4; audio.play().then(() => { audio.pause(); audio.currentTime = 0; }).catch(()=>{});
-    } else {
-        btn.innerHTML = "🔇 OFF"; btn.classList.remove('active');
-        audio.pause();
-    }
-}
-
-function triggerAlarm() {
-    if (!soundEnabled) return;
-    const audio = document.getElementById('audioSiren');
-    audio.currentTime = 0; audio.play().catch(()=>{});
-}
-
-function quickAdd(name, tag) {
-    const cleanTag = tag || 'EUW';
-    if(confirm(`¿Fichar a ${name} #${cleanTag} para seguimiento?`)){
-        myPlayers.push({ gameName: name, tagLine: cleanTag });
-        localStorage.setItem('myPlayers', JSON.stringify(myPlayers));
-        fetchStatus(); 
-    }
-}
-
 async function fetchStatus() {
     const container = document.getElementById('grid-container');
 
@@ -61,6 +26,7 @@ async function fetchStatus() {
         playersData.forEach((p, index) => {
             const uniqueId = p.gameName + p.tagLine;
             
+            // Lógica de detección de partida nueva para la alarma
             if (p.isIngame) {
                 if (lastGameIds[uniqueId] !== p.gameData.gameId) {
                     newGameDetected = true;
@@ -71,10 +37,81 @@ async function fetchStatus() {
             }
 
             let imgUrl = `https://ddragon.leagueoflegends.com/cdn/${DD_VERSION}/img/profileicon/${p.iconId || 29}.png`;
-
-            let lastMatchHtml = '';
             let statusBadge = '';
 
+            // --- SECCIÓN 1: RUEDA DE WINRATE Y RANK ---
+            let winrateHtml = '';
+            if (p.rank && p.rank !== "UNRANKED") {
+                const wr = p.winrate || 0;
+                const totalGames = (p.wins || 0) + (p.losses || 0);
+                
+                // Color dinámico para la rueda
+                let wrColor = '#ebbf0c'; // Amarillo (Mid)
+                if (wr >= 50) wrColor = 'var(--accent-green)'; // Verde (Good)
+                if (wr < 48) wrColor = 'var(--accent-red)';   // Rojo (Bad)
+
+                // Gradiente cónico para el donut
+                const wheelStyle = `background: conic-gradient(${wrColor} ${wr}%, #333 0);`;
+                
+                // Color del texto del rango (Iron = gris, otros = blanco)
+                const rankColor = p.rank.includes("IRON") ? "#a19d94" : "#fff";
+
+                winrateHtml = `
+                    <div class="stats-container">
+                        <div class="wheel-wrapper" style="${wheelStyle}">
+                            <span class="wheel-text" style="color:${wrColor}">${wr}%</span>
+                        </div>
+                        <div class="winrate-details">
+                            <div class="rank-text" style="color:${rankColor}">${p.rank}</div>
+                            <div class="wl-text">${p.wins}W - ${p.losses}L (${totalGames})</div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                winrateHtml = `
+                    <div class="stats-container" style="border-bottom: 1px dashed #333; opacity:0.5;">
+                        <div class="winrate-details">
+                            <div class="rank-text">UNRANKED</div>
+                            <div class="wl-text">Sin datos de SoloQ</div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // --- SECCIÓN 2: PARTIDA EN VIVO (LIVE) ---
+            let liveHtml = '';
+            let liveTeamHtml = '';
+
+            if (p.isIngame) {
+                statusBadge = `<div class="status-badge live"><div class="dot"></div> LIVE NOW</div>`;
+                const minutes = Math.floor((Date.now() - p.gameData.startTime) / 60000);
+
+                liveHtml = `
+                    <div style="margin-top:5px;">MODO: <span class="highlight">${p.gameData.gameMode}</span></div>
+                    <div>TIEMPO: <span class="highlight">${minutes > 0 ? minutes + ' min' : 'Iniciando'}</span></div>
+                `;
+
+                if (p.gameData.participants) {
+                    let teamRows = p.gameData.participants.map(ally => {
+                        return `
+                        <div class="teammate-row">
+                            <span style="color:#aaa;">${ally.championId}</span> <span style="color:#fff;">${ally.name}</span>
+                            <button class="btn-quick-add" onclick="quickAdd('${ally.name}', '${ally.tag}')">FICHAR</button>
+                        </div>
+                    `}).join('');
+
+                    liveTeamHtml = `
+                        <details class="team-list">
+                            <summary>👥 VER EQUIPO ACTUAL</summary>
+                            ${teamRows}
+                        </details>
+                    `;
+                }
+            }
+
+            // --- SECCIÓN 3: ÚLTIMA PARTIDA (HISTORIAL) ---
+            let lastMatchHtml = '';
+            
             if (p.lastMatch) {
                 const color = p.lastMatch.win ? 'var(--accent-green)' : 'var(--accent-red)';
                 const resultText = p.lastMatch.win ? 'WIN' : 'LOSS';
@@ -118,41 +155,7 @@ async function fetchStatus() {
                  if (!p.isIngame) statusBadge = `<div class="status-badge unknown">SIN DATOS</div>`;
             }
 
-            let liveHtml = '';
-            let liveTeamHtml = '';
-
-            if (p.isIngame) {
-                statusBadge = `<div class="status-badge live"><div class="dot"></div> LIVE NOW</div>`;
-                
-                const minutes = Math.floor((Date.now() - p.gameData.startTime) / 60000);
-                let rankColor = "#fff";
-                if(p.rank.includes("IRON")) rankColor = "#a19d94"; 
-
-                liveHtml = `
-                    <div style="margin-bottom:5px; font-size:1rem; color:${rankColor}; font-weight:bold">ELO: ${p.rank}</div>
-                    <div>MODO: <span class="highlight">${p.gameData.gameMode}</span></div>
-                    <div>TIEMPO: <span class="highlight">${minutes > 0 ? minutes + ' min' : 'Iniciando'}</span></div>
-                `;
-
-                if (p.gameData.participants) {
-                    let teamRows = p.gameData.participants.map(ally => {
-                        return `
-                        <div class="teammate-row">
-                            <span style="color:#aaa;">${ally.championId}</span>
-                            <span style="color:#fff;">${ally.name}</span>
-                            <button class="btn-quick-add" onclick="quickAdd('${ally.name}', '${ally.tag}')">FICHAR</button>
-                        </div>
-                    `}).join('');
-
-                    liveTeamHtml = `
-                        <details class="team-list">
-                            <summary>👥 VER EQUIPO ACTUAL</summary>
-                            ${teamRows}
-                        </details>
-                    `;
-                }
-            }
-
+            // Construcción final de la tarjeta
             const opggLink = `https://www.op.gg/summoners/euw/${p.gameName}-${p.tagLine}`;
             const spectateCmd = p.isIngame ? `cd C:\\Riot Games\\League of Legends\\Game && "League of Legends.exe" "spectator spectator.euw1.lol.riotgames.com:80 ${p.gameData.encryptionKey} ${p.gameData.gameId} EUW1" "-UseRads"` : "";
 
@@ -174,7 +177,7 @@ async function fetchStatus() {
                     ${statusBadge}
                 </div>
                 <div class="info-block">
-                    ${liveHtml}       
+                    ${winrateHtml}   ${liveHtml}      
                     ${liveTeamHtml}   
                     ${lastMatchHtml}  
                 </div>
@@ -190,31 +193,3 @@ async function fetchStatus() {
 
     } catch (error) { console.error("Error:", error); }
 }
-
-function addPlayer() {
-    const name = document.getElementById('inputName').value.trim();
-    const tag = document.getElementById('inputTag').value.trim();
-    if(!name || !tag) return alert("Faltan datos");
-    myPlayers.push({ gameName: name, tagLine: tag });
-    localStorage.setItem('myPlayers', JSON.stringify(myPlayers));
-    document.getElementById('inputName').value = '';
-    fetchStatus();
-}
-
-function removePlayer(index) {
-    if(confirm("¿Eliminar?")) {
-        myPlayers.splice(index, 1);
-        localStorage.setItem('myPlayers', JSON.stringify(myPlayers));
-        fetchStatus();
-    }
-}
-
-function copyToClipboard(text) {
-    navigator.clipboard.writeText(text);
-    const toast = document.getElementById('toast');
-    toast.classList.remove('hidden');
-    setTimeout(() => toast.classList.add('hidden'), 2000);
-}
-
-fetchStatus();
-setInterval(fetchStatus, 60000);
