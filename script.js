@@ -13,6 +13,10 @@ async function fetchStatus() {
             body: JSON.stringify(myPlayers)
         });
 
+        if (!response.ok) {
+            throw new Error(`Error del servidor: ${response.status}`);
+        }
+
         const playersData = await response.json();
         
         if (playersData.error) {
